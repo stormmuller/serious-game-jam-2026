@@ -1,4 +1,5 @@
 {
+    "version": 1,
     "name": "InputSystem_Actions",
     "maps": [
         {
@@ -470,6 +471,34 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "Crouch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "Wheel",
+            "id": "07ab5d47-aa2e-464d-bd11-8205e9f3d266",
+            "actions": [
+                {
+                    "name": "Spin",
+                    "type": "Button",
+                    "id": "069821e1-9944-44ac-9bc4-aa94cb3d4169",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "e1012e57-aa7a-4d7e-90d8-bf941d3d5401",
+                    "path": "<Keyboard>/r",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Spin",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
