@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1dc5e01c6629bc4990c74a4368f0b7c, type: 3}
+  m_Name: Bomb
+  m_EditorClassIdentifier: Assembly-CSharp::Prize
+  displayName: Bomb
+  wheelColor: {r: 0.9995909, g: 1, b: 0, a: 1}
+  prizePrefab: {fileID: 8005497009974829027, guid: 54662bb29347c9241aac77fbf616f985, type: 3}
