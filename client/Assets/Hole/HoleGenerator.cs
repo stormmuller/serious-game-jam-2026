@@ -5,9 +5,12 @@ using UnityEngine;
 public class HoleGenerator : MonoBehaviour
 {
     [Header("Interior Size")]
+    [Tooltip("Left/right size on the local Z axis.")]
     [Min(1f)] [SerializeField] private float width = 8f;
-    [Min(1f)] [SerializeField] private float depth = 8f;
+    [Tooltip("Vertical size on the local X axis.")]
     [Min(1f)] [SerializeField] private float height = 8f;
+    [Tooltip("Front/back size on the local Y axis.")]
+    [Min(1f)] [SerializeField] private float depth = 8f;
     [Min(0.1f)] [SerializeField] private float wallThickness = 1f;
 
     [Header("Optional Appearance")]
@@ -53,37 +56,33 @@ public class HoleGenerator : MonoBehaviour
     public void Rebuild()
     {
         float outerWidth = width + wallThickness * 2f;
-        float outerDepth = depth + wallThickness * 2f;
-        float wallY = height * 0.5f;
-        float wallX = width * 0.5f + wallThickness * 0.5f;
-        float wallZ = depth * 0.5f + wallThickness * 0.5f;
+        float wallX = height * 0.5f;
+        float wallY = depth * 0.5f + wallThickness * 0.5f;
+        float wallZ = width * 0.5f + wallThickness * 0.5f;
 
         UpdatePanel(
             "Floor",
-            new Vector3(0f, -wallThickness * 0.5f, 0f),
-            new Vector3(outerWidth, wallThickness, outerDepth),
+            new Vector3(-wallThickness * 0.5f, 0f, 0f),
+            new Vector3(wallThickness, depth, outerWidth),
             floorMaterial);
 
         UpdatePanel(
-            "North Wall",
-            new Vector3(0f, wallY, wallZ),
-            new Vector3(outerWidth, height, wallThickness),
-            wallMaterial);
-        UpdatePanel(
-            "South Wall",
-            new Vector3(0f, wallY, -wallZ),
-            new Vector3(outerWidth, height, wallThickness),
-            wallMaterial);
-        UpdatePanel(
-            "East Wall",
+            "Wall",
             new Vector3(wallX, wallY, 0f),
-            new Vector3(wallThickness, height, depth),
+            new Vector3(height, wallThickness, outerWidth),
             wallMaterial);
         UpdatePanel(
-            "West Wall",
-            new Vector3(-wallX, wallY, 0f),
-            new Vector3(wallThickness, height, depth),
+            "Left Wall",
+            new Vector3(wallX, 0f, wallZ),
+            new Vector3(height, depth, wallThickness),
             wallMaterial);
+        UpdatePanel(
+            "Right Wall",
+            new Vector3(wallX, 0f, -wallZ),
+            new Vector3(height, depth, wallThickness),
+            wallMaterial);
+
+        RemoveLegacyPanels();
     }
 
     private void LateUpdate()
@@ -101,15 +100,41 @@ public class HoleGenerator : MonoBehaviour
 
         Transform player = movement.transform;
         Vector3 localPosition = transform.InverseTransformPoint(player.position);
-        if (localPosition.y >= height)
+        if (localPosition.x >= height)
         {
             return;
         }
 
         const float playerPadding = 0.5f;
-        localPosition.x = Mathf.Clamp(localPosition.x, -width * 0.5f + playerPadding, width * 0.5f - playerPadding);
-        localPosition.z = Mathf.Clamp(localPosition.z, -depth * 0.5f + playerPadding, depth * 0.5f - playerPadding);
+        localPosition.y = Mathf.Clamp(localPosition.y, -depth * 0.5f + playerPadding, depth * 0.5f - playerPadding);
+        localPosition.z = Mathf.Clamp(localPosition.z, -width * 0.5f + playerPadding, width * 0.5f - playerPadding);
         player.position = transform.TransformPoint(localPosition);
+    }
+
+    private void RemoveLegacyPanels()
+    {
+        RemovePanel("North Wall");
+        RemovePanel("South Wall");
+        RemovePanel("East Wall");
+        RemovePanel("West Wall");
+    }
+
+    private void RemovePanel(string panelName)
+    {
+        Transform panel = transform.Find(panelName);
+        if (panel == null)
+        {
+            return;
+        }
+
+        if (Application.isPlaying)
+        {
+            Destroy(panel.gameObject);
+        }
+        else
+        {
+            DestroyImmediate(panel.gameObject);
+        }
     }
 
     private void UpdatePanel(string panelName, Vector3 localPosition, Vector3 localScale, Material material)
