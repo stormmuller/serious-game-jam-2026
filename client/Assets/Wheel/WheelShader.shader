@@ -27,6 +27,9 @@ Shader "Custom/PrizeWheelURP"
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
+            // Must match WheelSpinner.MaxSegments.
+            #define MAX_SEGMENTS 32
+
             struct Attributes
             {
                 float4 positionOS   : POSITION;
@@ -44,6 +47,9 @@ Shader "Custom/PrizeWheelURP"
             SamplerState sampler_PaletteTex;
             half4 _BorderColor;
             float _BorderWidth;
+            // Cumulative normalized (0-1) angular boundary of each segment, parallel to _PaletteTex.
+            // _Boundaries[i] is the angle where segment i ends; segment 0 starts at 0.
+            float _Boundaries[MAX_SEGMENTS];
 
             Varyings vert (Attributes input)
             {
@@ -64,17 +70,34 @@ Shader "Custom/PrizeWheelURP"
                 
                 float angleNormalized = (angle + 3.14159265359) / (2.0 * 3.14159265359);
 
-                float segAngle = angleNormalized * _Segments;
-                float segmentIndex = floor(segAngle);
+                int segCount = (int)_Segments;
+                int segmentIndex = max(segCount - 1, 0);
+                float segStart = 0.0;
+                float segEnd = 1.0;
+                float prevBoundary = 0.0;
+
+                for (int i = 0; i < MAX_SEGMENTS; i++)
+                {
+                    if (i >= segCount) break;
+
+                    float boundary = _Boundaries[i];
+                    if (angleNormalized < boundary)
+                    {
+                        segmentIndex = i;
+                        segStart = prevBoundary;
+                        segEnd = boundary;
+                        break;
+                    }
+                    prevBoundary = boundary;
+                }
 
                 float uCoord = (segmentIndex + 0.5) / _Segments;
 
                 half4 col = _PaletteTex.Sample(sampler_PaletteTex, float2(uCoord, 0.5));
 
-                // Distance (in UV space) from the nearest segment divider line.
-                float fracSeg = segAngle - segmentIndex;
-                float distToBoundary = min(fracSeg, 1.0 - fracSeg);
-                float angularDist = distToBoundary * (2.0 * 3.14159265359 / _Segments);
+                // Distance (in normalized-angle space) from the nearest divider of this segment.
+                float distToBoundary = min(angleNormalized - segStart, segEnd - angleNormalized);
+                float angularDist = max(distToBoundary, 0.0) * (2.0 * 3.14159265359);
                 float arcDist = radius * angularDist;
 
                 col = lerp(_BorderColor, col, step(_BorderWidth, arcDist));

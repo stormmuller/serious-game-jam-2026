@@ -1,9 +1,20 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[System.Serializable]
+public class PrizeSlot
+{
+    public Prize prize;
+
+    [Tooltip("Relative chance of landing on this prize, specific to this wheel. A slot with weight 2 is twice as likely as one with weight 1; the wheel segment size scales the same way.")]
+    [Min(0.0001f)]
+    public float weight = 1f;
+}
+
+[RequireComponent(typeof(Renderer))]
 public class WheelSpinner : MonoBehaviour
 {
-    public int numberOfSegments = 8;
+    public PrizeSlot[] prizes;
 
     [Header("Input")]
     public InputActionAsset inputActions;
@@ -14,9 +25,23 @@ public class WheelSpinner : MonoBehaviour
     [SerializeField] private float maxSpinSpeed = 1080f;
     [SerializeField] private float deceleration = 250f;
 
+    [Header("Visuals")]
+    [SerializeField] private Renderer wheelRenderer;
+
+    // Must match MAX_SEGMENTS in WheelShader.shader.
+    private const int MaxSegments = 32;
+    private const float MinWeight = 0.0001f;
+
+    private static readonly int SegmentsId = Shader.PropertyToID("_Segments");
+    private static readonly int PaletteTexId = Shader.PropertyToID("_PaletteTex");
+    private static readonly int BoundariesId = Shader.PropertyToID("_Boundaries");
+
     private InputAction spinAction;
     private float currentSpeed;
     private bool isSpinning;
+
+    private MaterialPropertyBlock propertyBlock;
+    private Texture2D paletteTexture;
 
     private void Awake()
     {
@@ -33,6 +58,8 @@ public class WheelSpinner : MonoBehaviour
             spinAction.performed += OnSpinPerformed;
             spinAction.Enable();
         }
+
+        UpdateWheelVisuals();
     }
 
     private void OnDisable()
@@ -42,6 +69,16 @@ public class WheelSpinner : MonoBehaviour
             spinAction.performed -= OnSpinPerformed;
             spinAction.Disable();
         }
+    }
+
+    private void OnDestroy()
+    {
+        ReleasePaletteTexture();
+    }
+
+    private void OnValidate()
+    {
+        UpdateWheelVisuals();
     }
 
     private void OnSpinPerformed(InputAction.CallbackContext context)
@@ -73,11 +110,118 @@ public class WheelSpinner : MonoBehaviour
 
     private int GetCurrentSegment()
     {
-        float anglePerSegment = 360f / numberOfSegments;
+        float[] cumulativeWeights = ComputeCumulativeWeights();
         // Segment 0 starts centered at the top (local up). The wheel is rotated via -Z each
         // frame, so eulerAngles.z grows the opposite way to the visual spin; flipping it here
         // converts that back into "how far the wheel has turned" so it maps to the right segment.
         float angle = (360f - transform.eulerAngles.z) % 360f;
-        return Mathf.FloorToInt(angle / anglePerSegment) % numberOfSegments;
+        float angleNormalized = angle / 360f;
+
+        for (int i = 0; i < cumulativeWeights.Length; i++)
+        {
+            if (angleNormalized < cumulativeWeights[i]) return i;
+        }
+
+        return cumulativeWeights.Length - 1;
+    }
+
+    // Cumulative, normalized (0-1) weight boundary of each prize, in the same order as the
+    // palette texture. Boundary[i] is where prize i's segment ends; prize 0 starts at 0.
+    private float[] ComputeCumulativeWeights()
+    {
+        var cumulative = new float[prizes.Length];
+
+        float total = 0f;
+        for (int i = 0; i < prizes.Length; i++)
+        {
+            total += GetWeight(i);
+        }
+
+        float running = 0f;
+        for (int i = 0; i < prizes.Length; i++)
+        {
+            running += GetWeight(i);
+            cumulative[i] = running / total;
+        }
+
+        // Force the last boundary to exactly 1 to avoid leaving a sliver unmapped due to float error.
+        cumulative[^1] = 1f;
+        return cumulative;
+    }
+
+    private float GetWeight(int index)
+    {
+        PrizeSlot slot = prizes[index];
+        return slot != null ? Mathf.Max(slot.weight, MinWeight) : MinWeight;
+    }
+
+    public void UpdateWheelVisuals()
+    {
+        if (wheelRenderer == null)
+        {
+            wheelRenderer = GetComponent<Renderer>();
+        }
+
+        if (wheelRenderer == null) return;
+
+        if (prizes == null || prizes.Length == 0)
+        {
+            ReleasePaletteTexture();
+            wheelRenderer.SetPropertyBlock(null);
+            return;
+        }
+
+        if (prizes.Length > MaxSegments)
+        {
+            Debug.LogWarning($"WheelSpinner on {name} has {prizes.Length} prizes, but the shader only supports up to {MaxSegments}.", this);
+        }
+
+        RebuildPaletteTexture();
+
+        propertyBlock ??= new MaterialPropertyBlock();
+        wheelRenderer.GetPropertyBlock(propertyBlock);
+        propertyBlock.SetFloat(SegmentsId, prizes.Length);
+        propertyBlock.SetTexture(PaletteTexId, paletteTexture);
+        propertyBlock.SetFloatArray(BoundariesId, ComputeCumulativeWeights());
+        wheelRenderer.SetPropertyBlock(propertyBlock);
+    }
+
+    private void RebuildPaletteTexture()
+    {
+        ReleasePaletteTexture();
+
+        paletteTexture = new Texture2D(prizes.Length, 1, TextureFormat.RGBA32, false)
+        {
+            wrapMode = TextureWrapMode.Clamp,
+            filterMode = FilterMode.Point,
+            hideFlags = HideFlags.HideAndDontSave,
+        };
+
+        for (int i = 0; i < prizes.Length; i++)
+        {
+            // Segment fills are always opaque: an unset/zero-alpha wheelColor would otherwise
+            // render as an invisible wedge (only the border lines would be visible).
+            Color color = prizes[i]?.prize != null ? prizes[i].prize.wheelColor : Color.magenta;
+            color.a = 1f;
+            paletteTexture.SetPixel(i, 0, color);
+        }
+
+        paletteTexture.Apply(false, false);
+    }
+
+    private void ReleasePaletteTexture()
+    {
+        if (paletteTexture == null) return;
+
+        if (Application.isPlaying)
+        {
+            Destroy(paletteTexture);
+        }
+        else
+        {
+            DestroyImmediate(paletteTexture);
+        }
+
+        paletteTexture = null;
     }
 }
