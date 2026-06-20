@@ -104,7 +104,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WheelSpinner
   prizes: []
-  inputActions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  inputActions: {fileID: -944628639613478452, guid: 9c95b4dc6a806fb48b74e7c18950eb46, type: 3}
   spinActionName: Wheel/Spin
   minSpinSpeed: 450
   maxSpinSpeed: 750

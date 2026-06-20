@@ -2,6 +2,7 @@ using UnityEditor;
 using UnityEngine;
 
 [CustomEditor(typeof(WheelSpinner))]
+[CanEditMultipleObjects]
 public class WheelSpinnerEditor : Editor
 {
     public override void OnInspectorGUI()
