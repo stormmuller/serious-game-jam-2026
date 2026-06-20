@@ -1,0 +1,35 @@
+{
+    "version": 1,
+    "name": "Inputs",
+    "maps": [
+        {
+            "name": "Wheel",
+            "id": "1b6f9784-62d9-4585-a1f8-25a34ea3c804",
+            "actions": [
+                {
+                    "name": "Spin",
+                    "type": "Button",
+                    "id": "f900e868-f158-4fdb-aa4f-8e7599033a15",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "e2446536-31a4-4e54-b688-9eabf86a5842",
+                    "path": "<Keyboard>/r",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Spin",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}
