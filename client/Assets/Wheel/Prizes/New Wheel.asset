@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d1dc5e01c6629bc4990c74a4368f0b7c, type: 3}
   m_Name: New Wheel
   m_EditorClassIdentifier: Assembly-CSharp::Prize
-  displayName: 
-  wheelColor: {r: 0, g: 0, b: 0, a: 0}
+  displayName: New Wheel
+  wheelColor: {r: 0.13550425, g: 0, b: 1, a: 1}
