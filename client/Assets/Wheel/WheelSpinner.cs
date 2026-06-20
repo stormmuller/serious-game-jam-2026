@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
 [System.Serializable]
@@ -14,16 +15,18 @@ public class PrizeSlot
 [RequireComponent(typeof(Renderer))]
 public class WheelSpinner : MonoBehaviour
 {
-    public PrizeSlot[] prizes;
+    [SerializeField] private PrizeSlot[] prizes;
 
     [Header("Input")]
-    public InputActionAsset inputActions;
-    public string spinActionName = "Wheel/Spin";
+    [SerializeField] private InputActionAsset inputActions;
+    [SerializeField] private string spinActionName = "Wheel/Spin";
 
     [Header("Spin")]
     [SerializeField] private float minSpinSpeed = 720f;
     [SerializeField] private float maxSpinSpeed = 1080f;
     [SerializeField] private float deceleration = 250f;
+    [SerializeField] private UnityEvent<Prize> onWheelStopped;
+
 
     [Header("Visuals")]
     [SerializeField] private Renderer wheelRenderer;
@@ -42,6 +45,7 @@ public class WheelSpinner : MonoBehaviour
 
     private MaterialPropertyBlock propertyBlock;
     private Texture2D paletteTexture;
+    private readonly float[] boundariesBuffer = new float[MaxSegments];
 
     private void Awake()
     {
@@ -97,7 +101,8 @@ public class WheelSpinner : MonoBehaviour
         if (currentSpeed <= 0f)
         {
             isSpinning = false;
-            Debug.Log($"Wheel stopped on segment {GetCurrentSegment()}");
+            Debug.Log($"Wheel stopped on segment {GetCurrentPrizeSlot().prize.name} (index {GetCurrentSegment()})");
+            onWheelStopped.Invoke(GetCurrentPrizeSlot().prize);
         }
     }
 
@@ -125,6 +130,12 @@ public class WheelSpinner : MonoBehaviour
         return cumulativeWeights.Length - 1;
     }
 
+    private PrizeSlot GetCurrentPrizeSlot()
+    {
+        int segment = GetCurrentSegment();
+        return prizes[segment];
+    }
+
     // Cumulative, normalized (0-1) weight boundary of each prize, in the same order as the
     // palette texture. Boundary[i] is where prize i's segment ends; prize 0 starts at 0.
     private float[] ComputeCumulativeWeights()
@@ -147,6 +158,27 @@ public class WheelSpinner : MonoBehaviour
         // Force the last boundary to exactly 1 to avoid leaving a sliver unmapped due to float error.
         cumulative[^1] = 1f;
         return cumulative;
+    }
+
+    // Shader's _Boundaries array is fixed at MaxSegments; MaterialPropertyBlock won't allow
+    // the array size to change between calls (Unity caps it to the first size used and warns),
+    // so we always upload a constant-size buffer regardless of the current prize count.
+    private float[] ComputeBoundariesBuffer()
+    {
+        float[] cumulative = ComputeCumulativeWeights();
+        int count = Mathf.Min(cumulative.Length, MaxSegments);
+
+        for (int i = 0; i < count; i++)
+        {
+            boundariesBuffer[i] = cumulative[i];
+        }
+
+        for (int i = count; i < MaxSegments; i++)
+        {
+            boundariesBuffer[i] = 1f;
+        }
+
+        return boundariesBuffer;
     }
 
     private float GetWeight(int index)
@@ -182,7 +214,7 @@ public class WheelSpinner : MonoBehaviour
         wheelRenderer.GetPropertyBlock(propertyBlock);
         propertyBlock.SetFloat(SegmentsId, prizes.Length);
         propertyBlock.SetTexture(PaletteTexId, paletteTexture);
-        propertyBlock.SetFloatArray(BoundariesId, ComputeCumulativeWeights());
+        propertyBlock.SetFloatArray(BoundariesId, ComputeBoundariesBuffer());
         wheelRenderer.SetPropertyBlock(propertyBlock);
     }
 

@@ -5,4 +5,5 @@ public class Prize : ScriptableObject
 {
     public string displayName;
     public Color wheelColor;
+    public GameObject prizePrefab;
 }

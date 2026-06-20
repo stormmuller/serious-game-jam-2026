@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 3562714697970901428}
   - component: {fileID: 4767617313729191329}
   - component: {fileID: 7129172721002850041}
-  - component: {fileID: 6104299358364263758}
   - component: {fileID: 3802931175288349134}
   m_Layer: 0
   m_Name: Wheel
@@ -92,28 +91,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &6104299358364263758
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1045001858603026898}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!114 &3802931175288349134
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -129,6 +106,10 @@ MonoBehaviour:
   prizes: []
   inputActions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   spinActionName: Wheel/Spin
-  minSpinSpeed: 1000
-  maxSpinSpeed: 4000
+  minSpinSpeed: 450
+  maxSpinSpeed: 750
   deceleration: 250
+  onWheelStopped:
+    m_PersistentCalls:
+      m_Calls: []
+  wheelRenderer: {fileID: 7129172721002850041}
