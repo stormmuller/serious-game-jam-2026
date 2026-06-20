@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Prize
   displayName: Block
   wheelColor: {r: 1, g: 0, b: 0.6676798, a: 1}
-  prizePrefab: {fileID: 8379358911939202904, guid: 8ba2080dd38858f48937c2996e18390f, type: 3}
+  prizePrefab: {fileID: 1689925359576374879, guid: 017fc5f757eb37b42a724ca791878748, type: 3}

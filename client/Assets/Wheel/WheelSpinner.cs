@@ -108,7 +108,6 @@ public class WheelSpinner : MonoBehaviour
 
     public void Spin()
     {
-        if (isSpinning) return;
         currentSpeed = Random.Range(minSpinSpeed, maxSpinSpeed);
         isSpinning = true;
     }
