@@ -13,4 +13,5 @@ MonoBehaviour:
   m_Name: Explosive
   m_EditorClassIdentifier: Assembly-CSharp::Prize
   displayName: Explosive
-  wheelColor: {r: 0.6289307, g: 0, b: 0, a: 1}
+  wheelColor: {r: 1, g: 0.52106214, b: 0, a: 1}
+  prizePrefab: {fileID: 8313754046292280586, guid: d77297a6c83f36549b7eb6625192971a, type: 3}
