@@ -85,32 +85,6 @@ public class HoleGenerator : MonoBehaviour
         RemoveLegacyPanels();
     }
 
-    private void LateUpdate()
-    {
-        if (!Application.isPlaying)
-        {
-            return;
-        }
-
-        PlayerMovement movement = FindAnyObjectByType<PlayerMovement>();
-        if (movement == null)
-        {
-            return;
-        }
-
-        Transform player = movement.transform;
-        Vector3 localPosition = transform.InverseTransformPoint(player.position);
-        if (localPosition.x >= height)
-        {
-            return;
-        }
-
-        const float playerPadding = 0.5f;
-        localPosition.y = Mathf.Clamp(localPosition.y, -depth * 0.5f + playerPadding, depth * 0.5f - playerPadding);
-        localPosition.z = Mathf.Clamp(localPosition.z, -width * 0.5f + playerPadding, width * 0.5f - playerPadding);
-        player.position = transform.TransformPoint(localPosition);
-    }
-
     private void RemoveLegacyPanels()
     {
         RemovePanel("North Wall");
