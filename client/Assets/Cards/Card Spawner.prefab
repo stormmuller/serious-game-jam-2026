@@ -75,5 +75,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eacf3d7f7d82e1e4dbf136fa15fc1674, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CardSpawner
-  cardPrefab: {fileID: 0}
+  cardPrefab: {fileID: 1691571615802599900, guid: 2a57592d14862a444802845ba787e22b, type: 3}
   numberOfCardsToSpawn: 0
