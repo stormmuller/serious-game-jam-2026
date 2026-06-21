@@ -16,10 +16,20 @@ public class HoleGenerator : MonoBehaviour
     [Header("Optional Appearance")]
     [SerializeField] private Material floorMaterial;
     [SerializeField] private Material wallMaterial;
+    [Tooltip("World-space size covered by one UV tile before material tiling is applied.")]
+    [Min(0.01f)] [SerializeField] private float textureWorldSize = 20f;
 
     public float Width => width;
     public float Depth => depth;
     public float Height => height;
+
+    public void SetSize(float newWidth, float newHeight, float newDepth)
+    {
+        width = Mathf.Max(1f, newWidth);
+        height = Mathf.Max(1f, newHeight);
+        depth = Mathf.Max(1f, newDepth);
+        Rebuild();
+    }
 
     private void Awake()
     {
@@ -35,6 +45,7 @@ public class HoleGenerator : MonoBehaviour
         depth = Mathf.Max(1f, depth);
         height = Mathf.Max(1f, height);
         wallThickness = Mathf.Max(0.1f, wallThickness);
+        textureWorldSize = Mathf.Max(0.01f, textureWorldSize);
 
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.delayCall -= RebuildAfterValidation;
@@ -124,11 +135,123 @@ public class HoleGenerator : MonoBehaviour
 
         panel.localPosition = localPosition;
         panel.localRotation = Quaternion.identity;
-        panel.localScale = localScale;
+        panel.localScale = Vector3.one;
+
+        MeshFilter meshFilter = panel.GetComponent<MeshFilter>();
+        ReplaceGeneratedMesh(meshFilter, CreatePanelMesh(localScale, localPosition));
+
+        BoxCollider boxCollider = panel.GetComponent<BoxCollider>();
+        if (boxCollider != null)
+        {
+            boxCollider.center = Vector3.zero;
+            boxCollider.size = localScale;
+        }
 
         if (material != null)
         {
             panel.GetComponent<MeshRenderer>().sharedMaterial = material;
+        }
+    }
+
+    private Mesh CreatePanelMesh(Vector3 size, Vector3 localPosition)
+    {
+        float x = size.x * 0.5f;
+        float y = size.y * 0.5f;
+        float z = size.z * 0.5f;
+        float uvScale = 1f / textureWorldSize;
+
+        Vector3[] vertices =
+        {
+            // Front (+Z)
+            new(-x, -y,  z), new( x, -y,  z), new( x,  y,  z), new(-x,  y,  z),
+            // Back (-Z)
+            new( x, -y, -z), new(-x, -y, -z), new(-x,  y, -z), new( x,  y, -z),
+            // Right (+X)
+            new( x, -y,  z), new( x, -y, -z), new( x,  y, -z), new( x,  y,  z),
+            // Left (-X)
+            new(-x, -y, -z), new(-x, -y,  z), new(-x,  y,  z), new(-x,  y, -z),
+            // Top (+Y)
+            new(-x,  y,  z), new( x,  y,  z), new( x,  y, -z), new(-x,  y, -z),
+            // Bottom (-Y)
+            new(-x, -y, -z), new( x, -y, -z), new( x, -y,  z), new(-x, -y,  z),
+        };
+
+        Vector3[] normals =
+        {
+            Vector3.forward, Vector3.forward, Vector3.forward, Vector3.forward,
+            Vector3.back, Vector3.back, Vector3.back, Vector3.back,
+            Vector3.right, Vector3.right, Vector3.right, Vector3.right,
+            Vector3.left, Vector3.left, Vector3.left, Vector3.left,
+            Vector3.up, Vector3.up, Vector3.up, Vector3.up,
+            Vector3.down, Vector3.down, Vector3.down, Vector3.down,
+        };
+
+        Vector2[] uvs = new Vector2[24];
+        SetProjectedFaceUvs(uvs, vertices, 0, localPosition, uvScale, 0, 1);
+        SetProjectedFaceUvs(uvs, vertices, 4, localPosition, uvScale, 0, 1);
+        SetProjectedFaceUvs(uvs, vertices, 8, localPosition, uvScale, 2, 1);
+        SetProjectedFaceUvs(uvs, vertices, 12, localPosition, uvScale, 2, 1);
+        SetProjectedFaceUvs(uvs, vertices, 16, localPosition, uvScale, 0, 2);
+        SetProjectedFaceUvs(uvs, vertices, 20, localPosition, uvScale, 0, 2);
+
+        int[] triangles = new int[36];
+        for (int face = 0; face < 6; face++)
+        {
+            int vertex = face * 4;
+            int triangle = face * 6;
+            triangles[triangle] = vertex;
+            triangles[triangle + 1] = vertex + 1;
+            triangles[triangle + 2] = vertex + 2;
+            triangles[triangle + 3] = vertex;
+            triangles[triangle + 4] = vertex + 2;
+            triangles[triangle + 5] = vertex + 3;
+        }
+
+        Mesh mesh = new()
+        {
+            name = "Hole Panel Mesh",
+            vertices = vertices,
+            normals = normals,
+            uv = uvs,
+            triangles = triangles,
+        };
+        mesh.RecalculateBounds();
+        return mesh;
+    }
+
+    private static void SetProjectedFaceUvs(
+        Vector2[] uvs,
+        Vector3[] vertices,
+        int start,
+        Vector3 localPosition,
+        float uvScale,
+        int uAxis,
+        int vAxis)
+    {
+        for (int index = start; index < start + 4; index++)
+        {
+            Vector3 point = vertices[index] + localPosition;
+            uvs[index] = new Vector2(point[uAxis], point[vAxis]) * uvScale;
+        }
+    }
+
+    private static void ReplaceGeneratedMesh(MeshFilter meshFilter, Mesh mesh)
+    {
+        Mesh oldMesh = meshFilter.sharedMesh;
+        meshFilter.sharedMesh = mesh;
+
+        if (oldMesh == null || oldMesh.name != "Hole Panel Mesh")
+        {
+            return;
+        }
+
+        if (Application.isPlaying)
+        {
+            Destroy(oldMesh);
+        }
+        else
+        {
+            DestroyImmediate(oldMesh);
         }
     }
 }
