@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2c4770e8de565e14ab04a327f930fae8, type: 3}
   m_Name: Prize Spawner
   m_EditorClassIdentifier: Assembly-CSharp::PrizeSpawner
-  minXSpawnPoint: -5
-  maxXSpawnPoint: 10
+  minXSpawnPoint: -2
+  maxXSpawnPoint: 2
