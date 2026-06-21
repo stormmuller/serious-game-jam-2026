@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 4767617313729191329}
   - component: {fileID: 7129172721002850041}
   - component: {fileID: 3802931175288349134}
+  - component: {fileID: 6902643752892445834}
   m_Layer: 0
   m_Name: Wheel
   m_TagString: Untagged
@@ -112,4 +113,33 @@ MonoBehaviour:
   onWheelStopped:
     m_PersistentCalls:
       m_Calls: []
+  wheelSpinClip: {fileID: 8300000, guid: 1ab235d0d6d4497429ba99ded2369651, type: 3}
+  itemSelectionClip: {fileID: 8300000, guid: 2eb714e9ba4c0b74e95548334669d60c, type: 3}
   wheelRenderer: {fileID: 7129172721002850041}
+--- !u!82 &6902643752892445834
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1045001858603026898}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_PlayOnAwake: 0
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0

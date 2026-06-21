@@ -12,7 +12,7 @@ public class PrizeSlot
     public float weight = 1f;
 }
 
-[RequireComponent(typeof(Renderer))]
+[RequireComponent(typeof(Renderer), typeof(AudioSource))]
 public class WheelSpinner : MonoBehaviour
 {
     [SerializeField] private PrizeSlot[] prizes;
@@ -27,6 +27,9 @@ public class WheelSpinner : MonoBehaviour
     [SerializeField] private float deceleration = 250f;
     [SerializeField] private UnityEvent<Prize> onWheelStopped;
 
+    [Header("Audio")]
+    [SerializeField] private AudioClip wheelSpinClip;
+    [SerializeField] private AudioClip itemSelectionClip;
 
     [Header("Visuals")]
     [SerializeField] private Renderer wheelRenderer;
@@ -40,6 +43,7 @@ public class WheelSpinner : MonoBehaviour
     private static readonly int BoundariesId = Shader.PropertyToID("_Boundaries");
 
     private InputAction spinAction;
+    private AudioSource audioSource;
     private float currentSpeed;
     private bool isSpinning;
 
@@ -49,6 +53,9 @@ public class WheelSpinner : MonoBehaviour
 
     private void Awake()
     {
+        audioSource = GetComponent<AudioSource>() ?? gameObject.AddComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+
         if (inputActions != null)
         {
             spinAction = inputActions.FindAction(spinActionName, throwIfNotFound: true);
@@ -72,6 +79,11 @@ public class WheelSpinner : MonoBehaviour
         {
             spinAction.performed -= OnSpinPerformed;
             spinAction.Disable();
+        }
+
+        if (audioSource != null)
+        {
+            audioSource.Stop();
         }
     }
 
@@ -101,6 +113,13 @@ public class WheelSpinner : MonoBehaviour
         if (currentSpeed <= 0f)
         {
             isSpinning = false;
+            StopSpinSound();
+
+            if (itemSelectionClip != null)
+            {
+                audioSource.PlayOneShot(itemSelectionClip);
+            }
+
             Debug.Log($"Wheel stopped on segment {GetCurrentPrizeSlot().prize.name} (index {GetCurrentSegment()})");
             onWheelStopped.Invoke(GetCurrentPrizeSlot().prize);
         }
@@ -110,6 +129,23 @@ public class WheelSpinner : MonoBehaviour
     {
         currentSpeed = Random.Range(minSpinSpeed, maxSpinSpeed);
         isSpinning = true;
+
+        if (wheelSpinClip != null)
+        {
+            audioSource.Stop();
+            audioSource.clip = wheelSpinClip;
+            audioSource.loop = true;
+            audioSource.Play();
+        }
+    }
+
+    private void StopSpinSound()
+    {
+        if (audioSource == null || audioSource.clip != wheelSpinClip) return;
+
+        audioSource.Stop();
+        audioSource.clip = null;
+        audioSource.loop = false;
     }
 
     private int GetCurrentSegment()
